@@ -1,0 +1,14 @@
+FastAPI
+uvicorn
+sqlalchemy
+alembic
+pydantic
+redis
+celery
+python-dotenv
+pytest
+httpx
+pytest-asyncio
+asyncpg
+passlib[bcrypt]
+email-validator
