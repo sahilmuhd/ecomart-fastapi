@@ -1,117 +1,100 @@
-# EcoMart API
+<div align="center">
 
-EcoMart is a multi-tenant e-commerce platform designed to facilitate store management, product catalog management, inventory management, and order processing. This project leverages FastAPI for building the API, Redis for caching, and Celery for background job processing. It is containerized using Docker for easy deployment and scalability.
+<img src="https://capsule-render.vercel.app/api?type=waving&height=200&color=0:0d0221,50:7b2ff7,100:00f0ff&text=EcoMart%20API&fontColor=00f0ff&fontSize=48&fontAlignY=38&desc=Multi-tenant%20e-commerce%20backend%20built%20with%20FastAPI&descAlignY=58&descSize=16&animation=fadeIn" alt="EcoMart API"/>
 
-## Features
+<img src="https://img.shields.io/badge/FastAPI-0d0221?style=for-the-badge&logo=fastapi&logoColor=00f0ff"/>
+<img src="https://img.shields.io/badge/Python-0d0221?style=for-the-badge&logo=python&logoColor=7b2ff7"/>
+<img src="https://img.shields.io/badge/PostgreSQL-0d0221?style=for-the-badge&logo=postgresql&logoColor=ff2a6d"/>
+<img src="https://img.shields.io/badge/SQLAlchemy-0d0221?style=for-the-badge&logo=sqlalchemy&logoColor=00f0ff"/>
+<img src="https://img.shields.io/badge/Redis-0d0221?style=for-the-badge&logo=redis&logoColor=7b2ff7"/>
+<img src="https://img.shields.io/badge/Celery-0d0221?style=for-the-badge&logo=celery&logoColor=ff2a6d"/>
+<img src="https://img.shields.io/badge/Docker-0d0221?style=for-the-badge&logo=docker&logoColor=00f0ff"/>
+<img src="https://img.shields.io/badge/Pytest-0d0221?style=for-the-badge&logo=pytest&logoColor=7b2ff7"/>
 
-- **Multi-Tenant Architecture**: Supports multiple vendors with isolated data.
-- **Store Management**: Vendors can create and manage their stores.
-- **Product Catalog**: Manage products with features to add, update, and retrieve product information.
-- **Inventory Management**: Track product stock levels efficiently.
-- **Order Processing**: Create and manage customer orders seamlessly.
-- **Background Jobs**: Utilize Celery for handling background tasks such as sending emails and syncing inventory.
-- **Caching**: Improve performance with Redis caching.
+</div>
 
-## Project Structure
+## // OVERVIEW
+
+EcoMart is a multi-tenant e-commerce API scaffold built with FastAPI. It sets up routers, models, schemas, services, a tenant-context middleware, Redis and Celery wiring, and a Docker Compose environment for stores, products, inventory and orders.
+
+> Status: early-stage scaffold. Some routers (for example inventory and stores) import modules that are not yet in the repo, so treat it as a work in progress.
+
+## // FEATURES
+
+- Versioned API under `/api/v1` with routers for auth, stores, products, inventory and orders
+- Tenant context middleware that reads the `X-Tenant-ID` request header and rejects requests without it
+- SQLAlchemy models for users, tenants, stores, products, inventory and orders, with an Alembic folder for migrations
+- Celery app and background tasks (`sync_inventory`, `process_order`)
+- Redis client module for caching
+- Password hashing dependency (`passlib[bcrypt]`) and Pydantic schemas
+- Pytest suite scaffold (health, products, orders)
+- Dockerfile, Celery Dockerfile and `docker-compose.yml` (web, PostgreSQL, Redis, Celery)
+
+## // TECH_STACK
+
+| Layer | Tools |
+| --- | --- |
+| API | FastAPI, Uvicorn, Pydantic |
+| Database | PostgreSQL, SQLAlchemy, Alembic, asyncpg |
+| Cache and queue | Redis, Celery |
+| Testing | Pytest, pytest-asyncio, httpx |
+| Tooling | Docker, Docker Compose, Makefile |
+
+## // GETTING_STARTED
+
+```bash
+git clone https://github.com/sahilmuhd/ecomart-fastapi.git
+cd ecomart-fastapi
+
+# configure environment (see .env.example for the variable names)
+cp .env.example .env
+
+# option 1: Docker (web, PostgreSQL, Redis, Celery)
+docker-compose up --build
+
+# option 2: local
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# run tests
+pytest tests/
+```
+
+Environment variables listed in `.env.example`: `DATABASE_URL`, `REDIS_URL`, `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`, `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `CORS_ORIGINS`, `TENANT_MODEL`, `DEFAULT_TENANT`.
+
+## // PROJECT_STRUCTURE
 
 ```
 ecomart-fastapi
 ├── app
-│   ├── main.py
-│   ├── api
-│   │   └── v1
-│   │       ├── routers
-│   │       │   ├── auth.py
-│   │       │   ├── stores.py
-│   │       │   ├── products.py
-│   │       │   ├── inventory.py
-│   │       │   └── orders.py
-│   │       └── deps.py
-│   ├── core
-│   │   ├── config.py
-│   │   └── celery_app.py
-│   ├── db
-│   │   ├── base.py
-│   │   ├── session.py
-│   │   └── models
-│   │       ├── user.py
-│   │       ├── tenant.py
-│   │       ├── store.py
-│   │       ├── product.py
-│   │       ├── inventory.py
-│   │       └── order.py
-│   ├── schemas
-│   │   ├── user.py
-│   │   ├── tenant.py
-│   │   ├── store.py
-│   │   ├── product.py
-│   │   └── order.py
-│   ├── services
-│   │   ├── auth_service.py
-│   │   ├── product_service.py
-│   │   └── order_service.py
-│   ├── tasks
-│   │   ├── __init__.py
-│   │   └── background_jobs.py
-│   ├── cache
-│   │   └── redis_client.py
-│   ├── middleware
-│   │   └── tenant_middleware.py
-│   └── utils
-│       ├── pagination.py
-│       └── exceptions.py
-├── alembic
-│   └── versions
+│   ├── main.py            # FastAPI app, CORS, tenant middleware, routers
+│   ├── api/v1             # routers (auth, stores, products, inventory, orders) and deps
+│   ├── core               # config and Celery app
+│   ├── db                 # base, session, models
+│   ├── schemas            # Pydantic schemas
+│   ├── services           # auth, product, order services
+│   ├── tasks              # Celery background jobs
+│   ├── cache              # Redis client
+│   ├── middleware         # tenant context middleware
+│   └── utils              # pagination, exceptions
+├── alembic/versions
 ├── tests
-│   ├── conftest.py
-│   ├── test_health.py
-│   └── api
-│       ├── test_products.py
-│       └── test_orders.py
-├── docker
-│   └── celery
-│       └── Dockerfile
-├── .env.example
+├── docker/celery
 ├── Dockerfile
 ├── docker-compose.yml
-├── pyproject.toml
-├── requirements.txt
 ├── Makefile
-├── .gitignore
-└── README.md
+└── requirements.txt
 ```
 
-## Getting Started
+## // AUTHOR
 
-### Prerequisites
+Sahil, [github.com/sahilmuhd](https://github.com/sahilmuhd)
 
-- Python 3.8 or higher
-- Docker and Docker Compose
-- Redis
-- PostgreSQL (or your preferred database)
+<div align="center">
 
-### Installation
+<img src="https://capsule-render.vercel.app/api?type=waving&height=100&color=0:00f0ff,50:7b2ff7,100:0d0221&section=footer" alt="footer"/>
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/ecomart-fastapi.git
-   cd ecomart-fastapi
-   ```
+Built by [Sahil](https://github.com/sahilmuhd) · [sahilmuhd.com](https://sahilmuhd.com)
 
-2. Create a `.env` file based on the `.env.example` file and configure your environment variables.
-
-3. Build and run the application using Docker:
-   ```
-   docker-compose up --build
-   ```
-
-### Running Tests
-
-To run the tests, use the following command:
-```
-pytest
-```
-
-### License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+</div>
